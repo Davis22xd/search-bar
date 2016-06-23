@@ -3,7 +3,12 @@
   "description": "this element has some parameters to do a search given a name and an url to an api rest resource ",
   "main": "search-bar.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#^1.4.0"
+    "polymer": "Polymer/polymer#^1.4.0",
+    "iron-ajax": "PolymerElements/iron-ajax#^1.0.0",
+    "iron-collapse": "PolymerElements/iron-collapse#^1.0.0",
+    "paper-icon-button": "PolymerElements/paper-icon-button#^1.0.0",
+    "paper-input": "PolymerElements/paper-input#^1.0.0",
+    "paper-item": "PolymerElements/paper-item#^1.0.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",

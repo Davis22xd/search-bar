@@ -1,27 +1,253 @@
 <link rel="import" href="app/bower_components/polymer/polymer.html">
 
+<link rel="import" href="app/bower_components/paper-item/paper-item.html">
+<link rel="import" href="app/bower_components/paper-input/paper-input.html">
+<link rel="import" href="app/bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="app/bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="app/bower_components/iron-collapse/iron-collapse.html">
+
+<script src="script/operations.js"></script>
+<script src="script/example-info.js"></script>
+
 <dom-module id="search-bar">
+    <style is="custom-style">
+        .container {
+            @apply(--layout-horizontal);
+            width: 100%;
+            padding-left: 5%;
+        }
+
+        .flexchild {
+            @apply(--layout-flex);
+        }
+
+        .section {
+            width: 100%;
+            margin-top: 3%;
+            margin-right: 5%;
+            padding-left: 5%;
+        }
+
+        #buttonCancel {
+            color: #F44336;
+        }
+
+        #buttonAdd {
+            color: #9C27B0;
+        }
+
+        #fail {
+            color: #F44336;
+            visibility: var(--fail-visibility);
+        }
+
+        #search {
+            color: #9C27B0;
+        }
+
+        #success {
+            visibility: var(--success-visibility);
+        }
+
+        #sectionSearch {
+            height: var(--section-search-height);
+        }
+
+        #sectionResult {
+            visibility: var(--result-section-success-visibility);
+            height: var(--result-section-success-height);
+        }
+
+        #sectionError {
+            visibility: var(--result-section-fail-visibility);
+            height: var(--result-section-fail-height);
+        }
+
+        iron-collapse {
+            clear: both;
+            width: 100%;
+        }
+
+    </style>
     <template>
-        <style>
-            :host {
-                display: block;
-            }
-        </style>
-        <h2>Hello [[prop1]]</h2>
+        <iron-ajax
+                id="ajax"
+                params='{"format":"json"}'
+                on-response="showResponse"
+                on-error="showError"
+                handle-as="json">
+        </iron-ajax>
+        <iron-collapse id="collapser">
+            <section class="flexchild horizontal layout section" id="sectionSearch">
+                <paper-input floatinglabel class="flex" maxlength="254" id="field" value="{{value}}"
+                             label="{{label}}"></paper-input>
+                <paper-icon-button icon="search" title="Buscar" id="search" on-click="search"></paper-icon-button>
+                <paper-icon-button icon="cancel" title="Cancel" id="buttonCancel"
+                                   on-click="restartSearchBar"></paper-icon-button>
+            </section>
+            <section class="flexchild horizontal layout section" id="sectionResult">
+                <paper-item id="success">{{display}}</paper-item>
+                <paper-icon-button icon="check" title="Añadir" id="buttonAdd" on-click="addEntity"></paper-icon-button>
+            </section>
+            <section class="flexchild horizontal layout section" id="sectionError">
+                <paper-item id="fail">No results</paper-item>
+            </section>
+        </iron-collapse>
     </template>
-
     <script>
-        Polymer({
-
-            is: 'search-bar',
-
-            properties: {
-                prop1: {
-                    type: String,
-                    value: 'search-bar',
+        (function() {
+            searchBar = Polymer({
+                is: 'search-bar',
+                properties: {
+                    label: String,
+                    response: Object,
+                    value: String,
+                    resource: String,
+                    searchResource: String,
+                    display: {
+                        type: String,
+                    },
+                    displayFunction: {
+                        type: Object
+                    },
+                    failVisibility: {
+                        type: String,
+                        value: 'hidden',
+                        observer: 'changeFailVisibility'
+                    },
+                    successVisibility: {
+                        type: String,
+                        value: 'hidden',
+                        observer: 'changeSuccessVisibility'
+                    },
+                    resultSuccessSectionVisibility: {
+                        type: String,
+                        value: 'hidden',
+                        observer: 'changeResultSuccessSectionVisibility'
+                    },
+                    resultFailSectionVisibility: {
+                        type: String,
+                        value: 'hidden',
+                        observer: 'changeResultFailSectionVisibility'
+                    },
+                    resultSuccessSectionHeight: {
+                        type: String,
+                        value: '0px',
+                        observer: 'changeResultSuccessSectionHeight'
+                    },
+                    resultFailSectionHeight: {
+                        type: String,
+                        value: '0px',
+                        observer: 'changeResultFailSectionHeight'
+                    },
+                    searchSectionHeight: {
+                        type: String,
+                        value: '60px',
+                        observer: 'changeSearchSectionHeight'
+                    }
                 },
-            },
 
-        });
+                listeners: {
+                    'create-Search-Form': 'search'
+                },
+
+                search(){
+                    this.$.ajax.method = 'GET';
+                    this.$.ajax.url = callExampleUrls[this.searchResource]() + this.$.field.value;
+                    this.$.ajax.generateRequest();
+                },
+
+                addEntity(){
+                    this.$.ajax.method = 'PUT';
+                    resource = entities[this.resource];
+                    var url = getURL(resource.url);
+                    this.$.ajax.url = url + this.response.id;
+                    this.$.ajax.generateRequest();
+                },
+                showResponse(event) {
+                    if (event.target.method == 'GET') {
+                        this.response = event.detail.response;
+                        this.display = this.displayFunction(this.response);
+                        this.failVisibility = 'hidden';
+                        this.successVisibility = 'visible';
+                        this.resultSuccessSectionVisibility = 'visible';
+                        this.resultFailSectionVisibility = 'hidden';
+                        this.resultSuccessSectionHeight = '48px';
+                        this.resultFailSectionHeight = '0px';
+                        this.searchSectionHeight = '60px';
+                    }
+                    else if (event.target.method == 'PUT') {
+                        this.fire('reload-list');
+                        this.restartSearchBar();
+                    }
+                },
+                restartSearchBar() {
+                    this.$.field.value = '';
+                    this.display = '';
+                    this.resultSuccessSectionHeight = '0px';
+                    this.resultFailSectionHeight = '0px';
+                    this.resultFailSectionVisibility = 'hidden';
+                    this.resultSuccessSectionVisibility = 'hidden';
+                    this.toggle();
+                },
+
+                showError(event) {
+                    this.failVisibility = 'visible';
+                    this.successVisibility = 'hidden';
+                    this.resultSuccessSectionVisibility = 'hidden';
+                    this.resultFailSectionVisibility = 'visible';
+                },
+
+                toggle() {
+                    this.searchSectionHeight = '60px';
+                    this.$.collapser.toggle();
+                },
+
+                changeFailVisibility: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--fail-visibility', newValue);
+                    }
+                },
+
+                changeSuccessVisibility: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--success-visibility', newValue);
+                    }
+                },
+
+                changeResultSuccessSectionVisibility: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--result-section-success-visibility', newValue);
+                    }
+                },
+
+                changeResultFailSectionVisibility: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--result-section-fail-visibility', newValue);
+                    }
+                },
+
+                changeResultSuccessSectionHeight: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--result-section-success-height', newValue);
+                    }
+                },
+
+                changeResultFailSectionHeight: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--result-section-fail-height', newValue);
+                    }
+                },
+
+                changeSearchSectionHeight: function(newValue) {
+                    if (newValue) {
+                        updateStyleDOM(this, '--section-search-height', newValue);
+                    }
+                },
+            });
+        })();
+
     </script>
+
 </dom-module>
