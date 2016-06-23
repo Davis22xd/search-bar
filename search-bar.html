@@ -1,0 +1,27 @@
+<link rel="import" href="app/bower_components/polymer/polymer.html">
+
+<dom-module id="search-bar">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+        </style>
+        <h2>Hello [[prop1]]</h2>
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'search-bar',
+
+            properties: {
+                prop1: {
+                    type: String,
+                    value: 'search-bar',
+                },
+            },
+
+        });
+    </script>
+</dom-module>
