@@ -101,10 +101,15 @@
                 is: 'search-bar',
                 properties: {
                     label: String,
-                    response: Object,
-                    value: String,
+                    opened: {
+                        type:Boolean,
+                        value: false,
+                        observer:'openCollapser'
+                    },
                     resource: String,
+                    response: Object,
                     searchResource: String,
+                    value: String,
                     display: {
                         type: String,
                     },
@@ -199,6 +204,11 @@
                     this.resultFailSectionVisibility = 'visible';
                 },
 
+                openCollapser(newValue) {
+                    if(newValue) {
+                        this.toggle();
+                    }
+                },
                 toggle() {
                     this.searchSectionHeight = '60px';
                     this.$.collapser.toggle();
@@ -247,7 +257,5 @@
                 },
             });
         })();
-
     </script>
-
 </dom-module>
